@@ -2,7 +2,7 @@
 
 namespace Blazor.DynamicJsInterop.Contracts;
 
-internal interface IAssemblyNameResolver
+public interface IAssemblyNameResolver
 {
     string GetEntryAssembly();
 

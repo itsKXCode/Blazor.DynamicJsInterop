@@ -7,6 +7,6 @@ public interface IDynamicJSRuntime<T> : IDynamicJSRuntime where T : ComponentBas
     public dynamic Exports { get; }
 }
 
-public interface IDynamicJSRuntime : IJSObjectReference {
-    public dynamic Global { get; }
+public interface IDynamicJSRuntime : IJSRuntime  {
+    public dynamic Window { get; }
 }
