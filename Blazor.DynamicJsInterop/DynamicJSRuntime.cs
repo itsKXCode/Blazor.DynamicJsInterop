@@ -7,17 +7,12 @@ namespace Blazor.DynamicJsInterop;
 
 internal class DynamicJSRuntime : DynamicJSBase, IDynamicJSRuntime {
     private readonly IJSRuntime _jsRuntime;
-    private readonly IOptions<JavaScriptReferencesOptions> _options;
-    private readonly IAssemblyNameResolver _assemblyNameResolver;
-    private string _currentNamespace = string.Empty;
 
     public virtual dynamic Window => this;
 
     public DynamicJSRuntime(IJSRuntime jsRuntime, IOptions<JavaScriptReferencesOptions> options,
         IAssemblyNameResolver assemblyNameResolver) : base(jsRuntime, options, assemblyNameResolver) {
         _jsRuntime = jsRuntime;
-        _options = options;
-        _assemblyNameResolver = assemblyNameResolver;
     }
 
     public override async ValueTask<TValue> InvokeAsync<TValue>(string identifier, params object?[]? args) {

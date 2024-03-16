@@ -12,8 +12,6 @@ internal abstract class DynamicJSBase : DynamicObject {
     protected readonly IOptions<JavaScriptReferencesOptions> Options;
     protected readonly IAssemblyNameResolver AssemblyNameResolver;
 
-    public virtual dynamic Global => this;
-
     protected virtual string JsGetPropertyMethod => "getProperty";
     protected virtual string JsInvokeMethod => "invokeMethod";
 
@@ -107,4 +105,5 @@ internal abstract class DynamicJSBase : DynamicObject {
     protected DynamicJSObjectReference GetObject(IJSObjectReference jsObjectReference) {
         return new DynamicJSObjectReference(jsObjectReference, JSRuntime, Options, AssemblyNameResolver);
     }
+    
 }

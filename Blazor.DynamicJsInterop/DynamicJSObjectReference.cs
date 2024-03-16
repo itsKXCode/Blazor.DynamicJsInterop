@@ -47,7 +47,7 @@ internal class DynamicJSObjectReference : DynamicJSBase, IDynamicJSObjectReferen
         async Task<object> GetValue() {
             //Get it as JsonElement first so we can get Informations about the Property as we cant call
             //InvokeAsync<IJSObjectReference> on non objects (string, number etc)
-            var property = await InvokeAsync<JsonElement>("getProperty", indexes[0]);
+            var property = await InvokeAsync<JsonElement>(JsGetPropertyMethod, indexes[0]);
             return await GetValueFromJsonElement(property, indexes[0]);
         }
         

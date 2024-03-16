@@ -9,8 +9,9 @@ using Microsoft.JSInterop;
 
 namespace Blazor.DynamicJsInterop;
 
-internal class DynamicIsolatedJSRuntime<TComponent> : DynamicJSRuntime, IDynamicJSRuntime<TComponent> where TComponent : ComponentBase {
+internal class DynamicIsolatedJSRuntime<TComponent> : DynamicJSRuntime, IAsyncDisposable, IDynamicJSRuntime<TComponent> where TComponent : ComponentBase {
     private Lazy<Task<IJSObjectReference>> _jsModule;
+    private IJSObjectReference? _loadedModule;
 
     public dynamic Exports => this;
     public override dynamic Window { get; }
@@ -35,10 +36,10 @@ internal class DynamicIsolatedJSRuntime<TComponent> : DynamicJSRuntime, IDynamic
         if (args is null || !args.Any()) 
             throw new ArgumentException("args needs to have the calling function in first place");
         
-        var module = await _jsModule.Value;
+        _loadedModule = await _jsModule.Value;
         
         //Unsafe shit
-        var targetInstanceId = ReflectionHelper.GetPrivatePropertyValue<long>(module, "Id");
+        var targetInstanceId = ReflectionHelper.GetPrivatePropertyValue<long>(_loadedModule, "Id");
         
         return await JSRuntime.InvokeAsync<T>(identifier, targetInstanceId, args.First(), args[1..]);
     }
@@ -47,16 +48,18 @@ internal class DynamicIsolatedJSRuntime<TComponent> : DynamicJSRuntime, IDynamic
         if (args is null || !args.Any()) 
             throw new ArgumentException("args needs to have the calling function in first place");
         
-        var module = await _jsModule.Value;
+        _loadedModule = await _jsModule.Value;
         
         //Unsafe shit
-        var targetInstanceId = ReflectionHelper.GetPrivatePropertyValue<long>(module, "Id");
+        var targetInstanceId = ReflectionHelper.GetPrivatePropertyValue<long>(_loadedModule, "Id");
         
         return await JSRuntime.InvokeAsync<T>(identifier, cancellationToken, targetInstanceId, args.First(), args[1..]);
     }
 
-    public async ValueTask DisposeAsync() {
-        var module = await _jsModule.Value;
-        await module.DisposeAsync();
+    public ValueTask DisposeAsync() {
+        if (_loadedModule != null)
+            return _loadedModule.DisposeAsync();
+        
+        return ValueTask.CompletedTask;
     }
 }
