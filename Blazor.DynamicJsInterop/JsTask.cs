@@ -26,10 +26,7 @@ public class JSTask<T> : DynamicObject {
                 _dynamicJSBase.AssemblyNameResolver);
             
             dynJs.TryGetMember(binder, out var res);
-            if (res is JSTask<T> jsTask) 
-                return await jsTask;
-
-            throw new Exception("Return Value needs to be of type JsTask");
+            return await (dynamic)res!;
         }
         
         result = new JSTask<object>(_dynamicJSBase, GetValue());
