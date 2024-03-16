@@ -4,11 +4,11 @@ using Microsoft.JSInterop;
 
 namespace Blazor.DynamicJsInterop;
 
-public class JsTask : DynamicObject {
+public class JSTask : DynamicObject {
     private readonly DynamicJSBase _dynamicJSBase;
     private readonly Task<object> _taskToReceiveCurrentJsObject;
 
-    internal JsTask(DynamicJSBase dynamicJSBase, Task<object> taskToReceiveCurrentJsObject) {
+    internal JSTask(DynamicJSBase dynamicJSBase, Task<object> taskToReceiveCurrentJsObject) {
         _dynamicJSBase = dynamicJSBase;
         _taskToReceiveCurrentJsObject = taskToReceiveCurrentJsObject;
     }
@@ -23,13 +23,13 @@ public class JsTask : DynamicObject {
                 _dynamicJSBase.Options, _dynamicJSBase.AssemblyNameResolver);
             
             dynJs.TryGetMember(binder, out var res);
-            if (res is JsTask jsTask) 
+            if (res is JSTask jsTask) 
                 return await jsTask;
 
             throw new Exception("Return Value needs to be of type JsTask");
         }
         
-        result = new JsTask(_dynamicJSBase, GetValue());
+        result = new JSTask(_dynamicJSBase, GetValue());
         return true;
     }
     
@@ -39,13 +39,13 @@ public class JsTask : DynamicObject {
                 _dynamicJSBase.Options, _dynamicJSBase.AssemblyNameResolver);
             
             dynJs.TryInvokeMember(binder, args, out var res);
-            if (res is JsTask jsTask) 
+            if (res is JSTask jsTask) 
                 return await jsTask;
 
             throw new Exception("Return Value needs to be of type JsTask");
         }
         
-        result = new JsTask(_dynamicJSBase, GetValue());
+        result = new JSTask(_dynamicJSBase, GetValue());
         return true;
     }
     
@@ -55,13 +55,13 @@ public class JsTask : DynamicObject {
                 _dynamicJSBase.Options, _dynamicJSBase.AssemblyNameResolver);
             
             dynJs.TryGetIndex(binder, indexes, out var res);
-            if (res is JsTask jsTask) 
+            if (res is JSTask jsTask) 
                 return await jsTask;
 
             throw new Exception("Return Value needs to be of type JsTask");
         }
         
-        result = new JsTask(_dynamicJSBase, GetValue());
+        result = new JSTask(_dynamicJSBase, GetValue());
         return true;
     }
 }

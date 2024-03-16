@@ -8,6 +8,9 @@ using Microsoft.JSInterop;
 
 namespace Blazor.DynamicJsInterop;
 
+/// <summary>
+/// Base Class for all Dynamic JS implementation, provides implementations for TryGetMember and TryInvokeMember
+/// </summary>
 internal abstract class DynamicJSBase : DynamicObject {
     public readonly IJSRuntime JSRuntime;
     public readonly IOptions<JavaScriptReferencesOptions> Options;
@@ -24,11 +27,12 @@ internal abstract class DynamicJSBase : DynamicObject {
     }
 
     public abstract ValueTask<TValue> InvokeAsync<TValue>(string identifier, params object?[]? args);
+    public abstract ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args);
 
-    public abstract ValueTask<TValue> InvokeAsync<TValue>(string identifier,
-        CancellationToken cancellationToken,
-        object?[]? args);
-
+    /// <summary>
+    /// Gets a Task to receive the value of a JavaScript Object Property
+    /// </summary>
+    /// <returns>JSTask</returns>
     public override bool TryGetMember(GetMemberBinder binder, out object? result) {
         async Task<object> GetValue() {
             //Get it as JsonElement first so we can get Informations about the Property as we cant call
@@ -37,24 +41,14 @@ internal abstract class DynamicJSBase : DynamicObject {
             return await GetValueFromJsonElement(property, binder.Name);
         }
         
-        result = new JsTask(this, GetValue());
+        result = new JSTask(this, GetValue());
         return true;
     }
 
-    protected async Task<object> GetValueFromJsonElement(JsonElement element, object propertyName) {
-        return element.ValueKind switch {
-            JsonValueKind.String => element.GetString(),
-            JsonValueKind.Number => element.GetDecimal(),
-            JsonValueKind.False => false,
-            JsonValueKind.True => true,
-            JsonValueKind.Null => null,
-            JsonValueKind.Array => GetObject(await InvokeAsync<IJSObjectReference>(JsGetPropertyMethod, propertyName), element),
-            JsonValueKind.Undefined => null,
-            JsonValueKind.Object => GetObject(await InvokeAsync<IJSObjectReference>(JsGetPropertyMethod, propertyName), element)
-        };
-    }
-    
-
+    /// <summary>
+    /// Gets a Task which calls a JavaScript Method
+    /// </summary>
+    /// <returns>JSTask</returns>
     public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result) {
         var csharpBinder = binder.GetType()
             .GetInterface("Microsoft.CSharp.RuntimeBinder.ICSharpInvokeOrInvokeMemberBinder");
@@ -79,7 +73,7 @@ internal abstract class DynamicJSBase : DynamicObject {
                     return await internalObject.value;
                 }
 
-                result = new JsTask(this, GetValue());
+                result = new JSTask(this, GetValue());
                 return true;
             } else if (typeArgs?.Count == 1) {
                 var method = typeof(DynamicJSBase).GetMethod(nameof(InvokeAsync),
@@ -88,7 +82,7 @@ internal abstract class DynamicJSBase : DynamicObject {
 
                 if (generic != null) {
                     //TODO convertion doesnt work
-                    result = new JsTask(this, (Task<object>)generic.Invoke(this, [JsInvokeMethod, arguments.ToArray()]));
+                    result = new JSTask(this, (Task<object>)generic.Invoke(this, [JsInvokeMethod, arguments.ToArray()]));
                     return true;
                 }
             } else {
@@ -100,10 +94,32 @@ internal abstract class DynamicJSBase : DynamicObject {
         return false;
     }
     
+    /// <summary>
+    /// Converts a JavaScript Value to a C# Object/Value
+    /// </summary>
+    protected async Task<object> GetValueFromJsonElement(JsonElement element, object propertyName) {
+        return element.ValueKind switch {
+            JsonValueKind.String => element.GetString(),
+            JsonValueKind.Number => element.GetDecimal(),
+            JsonValueKind.False => false,
+            JsonValueKind.True => true,
+            JsonValueKind.Null => null,
+            JsonValueKind.Array => GetObject(await InvokeAsync<IJSObjectReference>(JsGetPropertyMethod, propertyName), element),
+            JsonValueKind.Undefined => null,
+            JsonValueKind.Object => GetObject(await InvokeAsync<IJSObjectReference>(JsGetPropertyMethod, propertyName), element)
+        };
+    }
+
+    /// <summary>
+    /// Creates a new DynamicJSObjectReference
+    /// </summary>
     protected DynamicJSObjectReference GetObject(IJSObjectReference jsObjectReference, JsonElement jsonElement) {
         return new DynamicJSObjectReference(jsObjectReference, jsonElement, JSRuntime, Options, AssemblyNameResolver);
     }
     
+    /// <summary>
+    /// Creates a new DynamicJSObjectReference
+    /// </summary>
     protected DynamicJSObjectReference GetObject(IJSObjectReference jsObjectReference) {
         return new DynamicJSObjectReference(jsObjectReference, JSRuntime, Options, AssemblyNameResolver);
     }

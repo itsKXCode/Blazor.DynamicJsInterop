@@ -7,6 +7,9 @@ using Microsoft.JSInterop;
 
 namespace Blazor.DynamicJsInterop;
 
+/// <summary>
+/// Provides the ability Get Propertys and call Methods of a associated JavaScript Object
+/// </summary>
 internal class DynamicJSObjectReference : DynamicJSBase, IDynamicJSObjectReference {
     private IJSObjectReference _objectReference;
     private readonly JsonElement _jsonElement;
@@ -18,26 +21,40 @@ internal class DynamicJSObjectReference : DynamicJSBase, IDynamicJSObjectReferen
         _jsonElement = jsonElement;
     }
     
-    internal DynamicJSObjectReference(IJSObjectReference objectReference, IJSRuntime jsRuntime,
+    public DynamicJSObjectReference(IJSObjectReference objectReference, IJSRuntime jsRuntime,
         IOptions<JavaScriptReferencesOptions> options,
         IAssemblyNameResolver assemblyNameResolver) : base(jsRuntime, options, assemblyNameResolver) {
         _objectReference = objectReference;
     }
 
+    /// <summary>
+    /// Invokes a Method on the current JavaScript Object
+    /// </summary>
     public override ValueTask<TValue> InvokeAsync<TValue>(string identifier, params object?[]? args) {
         return _objectReference.InvokeAsync<TValue>(identifier, args);
     }
 
-    public override ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
-        object?[]? args) {
+    /// <summary>
+    /// Invokes a Method on the current JavaScript Object
+    /// </summary>
+    public override ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args) {
         return _objectReference.InvokeAsync<TValue>(identifier, cancellationToken, args);
     }
 
+    /// <summary>
+    /// Converts the current JavaScript Object to a C# object by Deserializing the Json
+    /// </summary>
+    /// <param name="binder"></param>
+    /// <param name="result"></param>
+    /// <returns></returns>
     public override bool TryConvert(ConvertBinder binder, out object? result) {
         result = _jsonElement.Deserialize(binder.Type);
         return true;
     }
     
+    /// <summary>
+    /// Gets a Task which receives a Object at a Array Index of the current object
+    /// </summary>
     public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result) {
         if (indexes.Length > 0) {
             //TODO Support Multidimensional Arrays
@@ -51,7 +68,7 @@ internal class DynamicJSObjectReference : DynamicJSBase, IDynamicJSObjectReferen
             return await GetValueFromJsonElement(property, indexes[0]);
         }
         
-        result = new JsTask(this, GetValue());
+        result = new JSTask(this, GetValue());
         return true;
     }
     

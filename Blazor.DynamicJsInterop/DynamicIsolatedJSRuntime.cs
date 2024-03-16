@@ -9,15 +9,24 @@ using Microsoft.JSInterop;
 
 namespace Blazor.DynamicJsInterop;
 
+/// <summary>
+/// Provides the ability Get Propertys and call Methods in a Isolated JavaScript Module
+/// </summary>
 internal class DynamicIsolatedJSRuntime<TComponent> : DynamicJSRuntime, IAsyncDisposable, IDynamicJSRuntime<TComponent> where TComponent : ComponentBase {
     private Lazy<Task<IJSObjectReference>> _jsModule;
     private IJSObjectReference? _loadedModule;
-
-    public dynamic Exports => this;
-    public override dynamic Window { get; }
-
     protected override string JsInvokeMethod => "invokeModuleMethod";
     protected override string JsGetPropertyMethod => "getModuleProperty";
+
+    /// <summary>
+    /// Exports of the current Module
+    /// </summary>
+    public dynamic Exports => this;
+    
+    /// <summary>
+    /// Global Window Object
+    /// </summary>
+    public override dynamic Window { get; }
 
     public DynamicIsolatedJSRuntime(IJSRuntime jsRuntime, IOptions<JavaScriptReferencesOptions> options,
         IAssemblyNameResolver assemblyNameResolver, IDynamicJSRuntime dynamicJsRuntime) 
@@ -32,18 +41,26 @@ internal class DynamicIsolatedJSRuntime<TComponent> : DynamicJSRuntime, IAsyncDi
         throw new NotSupportedException(); //TODO Check if possible to get Module exported variables and implement
     }
 
+    /// <summary>
+    /// Invokes a Method in the current Isolated JavaScript
+    /// </summary>
     public override async ValueTask<T> InvokeAsync<T>(string identifier, params object?[]? args) {
         if (args is null || !args.Any()) 
-            throw new ArgumentException("args needs to have the calling function in first place");
+            throw new ArgumentException("Args needs to have the calling function in first place");
         
         _loadedModule = await _jsModule.Value;
         
         //Unsafe shit
         var targetInstanceId = ReflectionHelper.GetPrivatePropertyValue<long>(_loadedModule, "Id");
         
+        //We dont call InvokeAsync on _jsModule because we want to call our custom Methods on the Window
+        //Object to retreive the result as a wrapped object
         return await JSRuntime.InvokeAsync<T>(identifier, targetInstanceId, args.First(), args[1..]);
     }
 
+    /// <summary>
+    /// Invokes a Method in the current Isolated JavaScript
+    /// </summary>
     public override async ValueTask<T> InvokeAsync<T>(string identifier, CancellationToken cancellationToken, params object?[]? args) {
         if (args is null || !args.Any()) 
             throw new ArgumentException("args needs to have the calling function in first place");
@@ -53,6 +70,8 @@ internal class DynamicIsolatedJSRuntime<TComponent> : DynamicJSRuntime, IAsyncDi
         //Unsafe shit
         var targetInstanceId = ReflectionHelper.GetPrivatePropertyValue<long>(_loadedModule, "Id");
         
+        //We dont call InvokeAsync on _jsModule because we want to call our custom Methods on the Window
+        //Object to retreive the result as a wrapped object
         return await JSRuntime.InvokeAsync<T>(identifier, cancellationToken, targetInstanceId, args.First(), args[1..]);
     }
 
