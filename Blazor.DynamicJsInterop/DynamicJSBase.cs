@@ -1,4 +1,5 @@
 ﻿using System.Dynamic;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Blazor.DynamicJsInterop.Contracts;
 using Blazor.DynamicJsInterop.Options;
@@ -8,9 +9,9 @@ using Microsoft.JSInterop;
 namespace Blazor.DynamicJsInterop;
 
 internal abstract class DynamicJSBase : DynamicObject {
-    protected readonly IJSRuntime JSRuntime;
-    protected readonly IOptions<JavaScriptReferencesOptions> Options;
-    protected readonly IAssemblyNameResolver AssemblyNameResolver;
+    public readonly IJSRuntime JSRuntime;
+    public readonly IOptions<JavaScriptReferencesOptions> Options;
+    public readonly IAssemblyNameResolver AssemblyNameResolver;
 
     protected virtual string JsGetPropertyMethod => "getProperty";
     protected virtual string JsInvokeMethod => "invokeMethod";
@@ -36,7 +37,7 @@ internal abstract class DynamicJSBase : DynamicObject {
             return await GetValueFromJsonElement(property, binder.Name);
         }
         
-        result = GetValue();
+        result = new JsTask(this, GetValue());
         return true;
     }
 
@@ -78,7 +79,7 @@ internal abstract class DynamicJSBase : DynamicObject {
                     return await internalObject.value;
                 }
 
-                result = GetValue();
+                result = new JsTask(this, GetValue());
                 return true;
             } else if (typeArgs?.Count == 1) {
                 var method = typeof(DynamicJSBase).GetMethod(nameof(InvokeAsync),
@@ -86,7 +87,8 @@ internal abstract class DynamicJSBase : DynamicObject {
                 var generic = method?.MakeGenericMethod(typeArgs[0]);
 
                 if (generic != null) {
-                    result = generic.Invoke(this, [JsInvokeMethod, arguments.ToArray()]);
+                    //TODO convertion doesnt work
+                    result = new JsTask(this, (Task<object>)generic.Invoke(this, [JsInvokeMethod, arguments.ToArray()]));
                     return true;
                 }
             } else {
@@ -105,5 +107,4 @@ internal abstract class DynamicJSBase : DynamicObject {
     protected DynamicJSObjectReference GetObject(IJSObjectReference jsObjectReference) {
         return new DynamicJSObjectReference(jsObjectReference, JSRuntime, Options, AssemblyNameResolver);
     }
-    
 }

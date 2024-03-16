@@ -51,7 +51,7 @@ internal class DynamicJSObjectReference : DynamicJSBase, IDynamicJSObjectReferen
             return await GetValueFromJsonElement(property, indexes[0]);
         }
         
-        result = GetValue();
+        result = new JsTask(this, GetValue());
         return true;
     }
     
