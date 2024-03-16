@@ -15,9 +15,9 @@ namespace Blazor.DynamicJsInterop;
 internal class DynamicIsolatedJSRuntime<TComponent> : DynamicJSRuntime, IAsyncDisposable, IDynamicJSRuntime<TComponent> where TComponent : ComponentBase {
     private Lazy<Task<IJSObjectReference>> _jsModule;
     private IJSObjectReference? _loadedModule;
+    protected override string JsInvokeMethodWrapped => "invokeModuleMethodWrapped";
+    protected override string JsGetPropertyMethod => "getModulePropertyWrapped";
     protected override string JsInvokeMethod => "invokeModuleMethod";
-    protected override string JsGetPropertyMethod => "getModuleProperty";
-
     /// <summary>
     /// Exports of the current Module
     /// </summary>

@@ -1,4 +1,5 @@
 ﻿using System.Dynamic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Blazor.DynamicJsInterop.Contracts;
@@ -17,6 +18,7 @@ internal abstract class DynamicJSBase : DynamicObject {
     public readonly IAssemblyNameResolver AssemblyNameResolver;
 
     protected virtual string JsGetPropertyMethod => "getProperty";
+    protected virtual string JsInvokeMethodWrapped => "invokeMethodWrapped";
     protected virtual string JsInvokeMethod => "invokeMethod";
 
     protected DynamicJSBase(IJSRuntime jsRuntime, IOptions<JavaScriptReferencesOptions> options,
@@ -34,7 +36,7 @@ internal abstract class DynamicJSBase : DynamicObject {
     /// </summary>
     /// <returns>JSTask</returns>
     public override bool TryGetMember(GetMemberBinder binder, out object? result) {
-        async Task<object> GetValue() {
+        async ValueTask<object> GetValue() {
             //Get it as JsonElement first so we can get Informations about the Property as we cant call
             //InvokeAsync<IJSObjectReference> on non objects (string, number etc)
             var property = await InvokeAsync<JsonElement>(JsGetPropertyMethod, binder.Name);
@@ -63,10 +65,10 @@ internal abstract class DynamicJSBase : DynamicObject {
             }
             
             if (typeArgs?.Count == 0) {
-                async Task<object> GetValue() {
+                async ValueTask<object> GetValue() {
                     //We need to get the IJSObject reference first as we dont want to double invoke the method
                     //the returned object will have a "value" property in it with the actual object/value
-                    var result = await InvokeAsync<IJSObjectReference>(JsInvokeMethod, arguments.ToArray());
+                    var result = await InvokeAsync<IJSObjectReference>(JsInvokeMethodWrapped, arguments.ToArray());
                     
                     //Use our object to get the actual Value
                     await using dynamic internalObject = GetObject(result);
@@ -76,13 +78,16 @@ internal abstract class DynamicJSBase : DynamicObject {
                 result = new JSTask(this, GetValue());
                 return true;
             } else if (typeArgs?.Count == 1) {
+                var genericType = typeArgs[0];
                 var method = typeof(DynamicJSBase).GetMethod(nameof(InvokeAsync),
-                    new[] { typeof(string), typeof(object?[]) });
-                var generic = method?.MakeGenericMethod(typeArgs[0]);
+                    [typeof(string), typeof(object?[])]);
+                var genericMethod = method?.MakeGenericMethod(genericType);
 
-                if (generic != null) {
-                    //TODO convertion doesnt work
-                    result = new JSTask(this, (Task<object>)generic.Invoke(this, [JsInvokeMethod, arguments.ToArray()]));
+                if (genericMethod != null) {
+                    var jsTaskType = typeof(JSTask<>).MakeGenericType(genericType);
+                    result = jsTaskType.GetConstructors( BindingFlags.NonPublic | BindingFlags.Instance).First().Invoke([
+                        this, genericMethod.Invoke(this, [JsInvokeMethod, arguments.ToArray()])
+                    ]);
                     return true;
                 }
             } else {
@@ -97,7 +102,7 @@ internal abstract class DynamicJSBase : DynamicObject {
     /// <summary>
     /// Converts a JavaScript Value to a C# Object/Value
     /// </summary>
-    protected async Task<object> GetValueFromJsonElement(JsonElement element, object propertyName) {
+    protected async ValueTask<object> GetValueFromJsonElement(JsonElement element, object propertyName) {
         return element.ValueKind switch {
             JsonValueKind.String => element.GetString(),
             JsonValueKind.Number => element.GetDecimal(),

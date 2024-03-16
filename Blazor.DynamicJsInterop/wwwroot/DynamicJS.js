@@ -1,16 +1,4 @@
-﻿Object.defineProperty(Object.prototype, "getPropertyAsObject",
-    {
-        value: function getPropertyAsObject(key)
-        {
-            return {
-                Value: this[key]
-            }
-        },
-        writable: true,
-        configurable: true
-    });
-
-Object.defineProperty(Object.prototype, "getProperty",
+﻿Object.defineProperty(Object.prototype, "getProperty",
     {
         value: function getProperty(key)
         {
@@ -30,15 +18,49 @@ Object.defineProperty(Object.prototype, "setProperty",
         configurable: true
     });
 
-Object.defineProperty(Object.prototype, "invokeMethod",
+Object.defineProperty(Object.prototype, "invokeMethodWrapped",
     {
-        value: function invokeMethod(methodName, ...args)
+        value: function invokeMethodWrapped(methodName, ...args)
         {
 
             var methodResult = this[methodName](...args);
             return {
                 value: methodResult
             };
+        },
+        writable: true,
+        configurable: true
+    });
+
+Object.defineProperty(Object.prototype, "invokeModuleMethodWrapped",
+    {
+        value: function invokeModuleMethodWrapped(targetInstanceId, identifier, ...args)
+        {
+            return new Promise(resolveMaster => {
+                const promise = new Promise(resolve => {
+                    var jsFunction = window.DotNet.findJSFunction(identifier, targetInstanceId);
+                    const synchronousResultOrPromise = jsFunction(...args);
+                    resolve(synchronousResultOrPromise);
+                });
+
+                promise.then(result => {
+                        resolveMaster({
+                            value: result
+                        });
+                    }
+                );
+            })
+        },
+        writable: true,
+        configurable: true
+    });
+
+Object.defineProperty(Object.prototype, "invokeMethod",
+    {
+        value: function invokeMethod(methodName, ...args)
+        {
+
+            return  this[methodName](...args);
         },
         writable: true,
         configurable: true
@@ -56,9 +78,7 @@ Object.defineProperty(Object.prototype, "invokeModuleMethod",
                 });
 
                 promise.then(result => {
-                        resolveMaster({
-                            value: result
-                        });
+                        resolveMaster(result);
                     }
                 );
             })
