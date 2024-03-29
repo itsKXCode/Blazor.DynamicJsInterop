@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blazor.DynamicJsInterop", "Blazor.DynamicJsInterop\Blazor.DynamicJsInterop.csproj", "{95BB8F9C-2C51-43BC-B7B5-EC50E34FE848}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{95BB8F9C-2C51-43BC-B7B5-EC50E34FE848}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95BB8F9C-2C51-43BC-B7B5-EC50E34FE848}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95BB8F9C-2C51-43BC-B7B5-EC50E34FE848}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95BB8F9C-2C51-43BC-B7B5-EC50E34FE848}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
