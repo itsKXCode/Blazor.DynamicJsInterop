@@ -4,6 +4,10 @@ using Microsoft.JSInterop;
 
 namespace Blazor.DynamicJsInterop;
 
+/// <summary>
+/// Represents a Task which receives a JavaScript Property
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public class JSTask<T> : DynamicObject {
     private readonly DynamicJSBase _dynamicJSBase;
     private readonly ValueTask<T> _taskToReceiveCurrentJsObject;

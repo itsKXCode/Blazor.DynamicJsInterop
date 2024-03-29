@@ -16,7 +16,8 @@ internal abstract class DynamicJSBase : DynamicObject {
     public readonly IJSRuntime JSRuntime;
     public readonly IOptions<JavaScriptReferencesOptions> Options;
     public readonly IAssemblyNameResolver AssemblyNameResolver;
-
+    
+    protected virtual string JsGetPropertyTypeMethod => "getPropertyType";
     protected virtual string JsGetPropertyMethod => "getProperty";
     protected virtual string JsInvokeMethodWrapped => "invokeMethodWrapped";
     protected virtual string JsInvokeMethod => "invokeMethod";
@@ -39,8 +40,19 @@ internal abstract class DynamicJSBase : DynamicObject {
         async ValueTask<object> GetValue() {
             //Get it as JsonElement first so we can get Informations about the Property as we cant call
             //InvokeAsync<IJSObjectReference> on non objects (string, number etc)
-            var property = await InvokeAsync<JsonElement>(JsGetPropertyMethod, binder.Name);
-            return await GetValueFromJsonElement(property, binder.Name);
+            try {
+                var property = await InvokeAsync<JsonElement>(JsGetPropertyMethod, binder.Name);
+                return await GetValueFromJsonElement(property, binder.Name);
+            } catch (Exception) {
+                //It throws an error if the Value is a JS Object which cant be serialized
+                
+                //Now check whats the type of the value, If its no Object, we cant do anything, something is wrong
+                var valueKind = await InvokeAsync<JsonValueKind>(JsGetPropertyTypeMethod, binder.Name);
+                if (valueKind != JsonValueKind.Object)
+                    throw;
+
+                return GetObject(await InvokeAsync<IJSObjectReference>(JsGetPropertyMethod, binder.Name));
+            }
         }
         
         result = new JSTask(this, GetValue());

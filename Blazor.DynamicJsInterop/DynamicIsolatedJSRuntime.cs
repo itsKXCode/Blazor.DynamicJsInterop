@@ -18,10 +18,11 @@ internal class DynamicIsolatedJSRuntime<TComponent> : DynamicJSRuntime, IAsyncDi
     protected override string JsInvokeMethodWrapped => "invokeModuleMethodWrapped";
     protected override string JsGetPropertyMethod => "getModulePropertyWrapped";
     protected override string JsInvokeMethod => "invokeModuleMethod";
+    
     /// <summary>
-    /// Exports of the current Module
+    /// Current Module
     /// </summary>
-    public dynamic Exports => this;
+    public dynamic Module => this;
     
     /// <summary>
     /// Global Window Object

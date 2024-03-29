@@ -2,7 +2,7 @@
 
 namespace Blazor.DynamicJsInterop.Helper;
 
-public class ReflectionHelper {
+public static class ReflectionHelper {
     /// <summary>
     /// Gets the value of a Private field
     /// </summary>
@@ -23,7 +23,7 @@ public class ReflectionHelper {
         const BindingFlags bf = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
 
         PropertyInfo? fi;
-        while ((fi = type.GetProperty(name, bf)) == null && (type = type.BaseType) != null) ;
+        while ((fi = type.GetProperty(name, bf)) == null && (type = type.BaseType) != null);
         return fi;
     }
 

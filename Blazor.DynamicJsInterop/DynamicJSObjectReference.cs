@@ -12,7 +12,11 @@ namespace Blazor.DynamicJsInterop;
 /// </summary>
 internal class DynamicJSObjectReference : DynamicJSBase, IDynamicJSObjectReference {
     private IJSObjectReference _objectReference;
-    private readonly JsonElement _jsonElement;
+    
+    /// <summary>
+    /// Represents the current Referenced JavaScript object as Json
+    /// </summary>
+    private readonly JsonElement? _jsonElement;
 
     public DynamicJSObjectReference(IJSObjectReference objectReference, JsonElement jsonElement, IJSRuntime jsRuntime,
         IOptions<JavaScriptReferencesOptions> options,
@@ -48,7 +52,14 @@ internal class DynamicJSObjectReference : DynamicJSBase, IDynamicJSObjectReferen
     /// <param name="result"></param>
     /// <returns></returns>
     public override bool TryConvert(ConvertBinder binder, out object? result) {
-        result = _jsonElement.Deserialize(binder.Type);
+        
+        //In some cases there is no JsonElement of the Object, e.g the Object is not serializable
+        if (_jsonElement is null) {
+            result = null;
+            return false;
+        }
+        
+        result = _jsonElement.Value.Deserialize(binder.Type);
         return true;
     }
     
