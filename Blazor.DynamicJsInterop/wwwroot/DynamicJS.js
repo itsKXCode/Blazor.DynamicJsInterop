@@ -35,18 +35,18 @@
         configurable: true
     });
 
-Object.defineProperty(Object.prototype, "getProperty",
+Object.defineProperty(Object.prototype, "getPropertyValue",
     {
-        value: function getProperty(key) {
+        value: function getPropertyValue(key) {
             return this[key];
         },
         writable: true,
         configurable: true
     });
 
-Object.defineProperty(Object.prototype, "setProperty",
+Object.defineProperty(Object.prototype, "setPropertyValue",
     {
-        value: function setProperty(key, value) {
+        value: function setPropertyValue(key, value) {
             this[key] = value;
         },
         writable: true,
@@ -69,7 +69,10 @@ Object.defineProperty(Object.prototype, "invokeModuleMethodWrapped", {
             return new Promise(resolveMaster => {
                 const promise = new Promise(resolve => {
                     const jsFunction = window.DotNet.findJSFunction(identifier, targetInstanceId);
-                    const synchronousResultOrPromise = jsFunction(...args);
+                    if (args.length === 1)
+                        var synchronousResultOrPromise = jsFunction(...args[0]);
+                    else
+                        synchronousResultOrPromise = jsFunction(...args);
                     resolve(synchronousResultOrPromise);
                 });
 
@@ -98,7 +101,10 @@ Object.defineProperty(Object.prototype, "invokeModuleMethod", {
         return new Promise(resolveMaster => {
             const promise = new Promise(resolve => {
                 const jsFunction = window.DotNet.findJSFunction(identifier, targetInstanceId);
-                const synchronousResultOrPromise = jsFunction(...args);
+                if (args.length === 1)
+                    var synchronousResultOrPromise = jsFunction(...args[0]);
+                else
+                    synchronousResultOrPromise = jsFunction(...args);
                 resolve(synchronousResultOrPromise);
             });
 

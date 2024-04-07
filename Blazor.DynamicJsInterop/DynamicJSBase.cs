@@ -6,6 +6,7 @@ using Blazor.DynamicJsInterop.Contracts;
 using Blazor.DynamicJsInterop.Options;
 using Microsoft.Extensions.Options;
 using Microsoft.JSInterop;
+using Microsoft.JSInterop.Infrastructure;
 
 namespace Blazor.DynamicJsInterop;
 
@@ -16,9 +17,12 @@ internal abstract class DynamicJSBase : DynamicObject {
     public readonly IJSRuntime JSRuntime;
     public readonly IOptions<JavaScriptReferencesOptions> Options;
     public readonly IAssemblyNameResolver AssemblyNameResolver;
+
+    public ValueTask WriteOperation { get; private set; }
     
     protected virtual string JsGetPropertyTypeMethod => "getPropertyType";
-    protected virtual string JsGetPropertyMethod => "getProperty";
+    protected virtual string JsGetPropertyValueMethod => "getPropertyValue";
+    protected virtual string JsSetPropertyValueMethod => "setPropertyValue";
     protected virtual string JsInvokeMethodWrapped => "invokeMethodWrapped";
     protected virtual string JsInvokeMethod => "invokeMethod";
 
@@ -27,11 +31,16 @@ internal abstract class DynamicJSBase : DynamicObject {
         JSRuntime = jsRuntime;
         Options = options;
         AssemblyNameResolver = assemblyNameResolver;
+        WriteOperation = ValueTask.CompletedTask;
     }
-
+    
     public abstract ValueTask<TValue> InvokeAsync<TValue>(string identifier, params object?[]? args);
     public abstract ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args);
 
+    public async ValueTask InvokeVoidAsync(string identifier, params object?[]? args) {
+        await InvokeAsync<IJSVoidResult>(identifier, args);
+    }
+    
     /// <summary>
     /// Gets a Task to receive the value of a JavaScript Object Property
     /// </summary>
@@ -41,7 +50,7 @@ internal abstract class DynamicJSBase : DynamicObject {
             //Get it as JsonElement first so we can get Informations about the Property as we cant call
             //InvokeAsync<IJSObjectReference> on non objects (string, number etc)
             try {
-                var property = await InvokeAsync<JsonElement>(JsGetPropertyMethod, binder.Name);
+                var property = await InvokeAsync<JsonElement>(JsGetPropertyValueMethod, binder.Name);
                 return await GetValueFromJsonElement(property, binder.Name);
             } catch (Exception) {
                 //It throws an error if the Value is a JS Object which cant be serialized
@@ -51,11 +60,16 @@ internal abstract class DynamicJSBase : DynamicObject {
                 if (valueKind != JsonValueKind.Object)
                     throw;
 
-                return GetObject(await InvokeAsync<IJSObjectReference>(JsGetPropertyMethod, binder.Name));
+                return GetObject(await InvokeAsync<IJSObjectReference>(JsGetPropertyValueMethod, binder.Name));
             }
         }
         
         result = new JSTask(this, GetValue());
+        return true;
+    }
+
+    public override bool TrySetMember(SetMemberBinder binder, object? value) {
+        WriteOperation = InvokeVoidAsync(JsSetPropertyValueMethod, binder.Name, value);
         return true;
     }
 
@@ -110,7 +124,7 @@ internal abstract class DynamicJSBase : DynamicObject {
         result = null;
         return false;
     }
-    
+
     /// <summary>
     /// Converts a JavaScript Value to a C# Object/Value
     /// </summary>
@@ -121,9 +135,9 @@ internal abstract class DynamicJSBase : DynamicObject {
             JsonValueKind.False => false,
             JsonValueKind.True => true,
             JsonValueKind.Null => null,
-            JsonValueKind.Array => GetObject(await InvokeAsync<IJSObjectReference>(JsGetPropertyMethod, propertyName), element),
+            JsonValueKind.Array => GetObject(await InvokeAsync<IJSObjectReference>(JsGetPropertyValueMethod, propertyName), element),
             JsonValueKind.Undefined => null,
-            JsonValueKind.Object => GetObject(await InvokeAsync<IJSObjectReference>(JsGetPropertyMethod, propertyName), element)
+            JsonValueKind.Object => GetObject(await InvokeAsync<IJSObjectReference>(JsGetPropertyValueMethod, propertyName), element)
         };
     }
 

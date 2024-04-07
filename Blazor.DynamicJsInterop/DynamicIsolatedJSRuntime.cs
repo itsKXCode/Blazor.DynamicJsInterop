@@ -16,7 +16,7 @@ internal class DynamicIsolatedJSRuntime<TComponent> : DynamicJSRuntime, IAsyncDi
     private Lazy<Task<IJSObjectReference>> _jsModule;
     private IJSObjectReference? _loadedModule;
     protected override string JsInvokeMethodWrapped => "invokeModuleMethodWrapped";
-    protected override string JsGetPropertyMethod => "getModulePropertyWrapped";
+    protected override string JsGetPropertyValueMethod => "getModulePropertyWrapped";
     protected override string JsInvokeMethod => "invokeModuleMethod";
     
     /// <summary>
@@ -38,6 +38,10 @@ internal class DynamicIsolatedJSRuntime<TComponent> : DynamicJSRuntime, IAsyncDi
         Window = dynamicJsRuntime;
     }
 
+    public Task ImportIsolatedModule() {
+        return _jsModule.Value;
+    }
+
     public override bool TryGetMember(GetMemberBinder binder, out object? result) {
         throw new NotSupportedException(); //TODO Check if possible to get Module exported variables and implement
     }
@@ -53,7 +57,7 @@ internal class DynamicIsolatedJSRuntime<TComponent> : DynamicJSRuntime, IAsyncDi
         
         //Unsafe shit
         var targetInstanceId = ReflectionHelper.GetPrivatePropertyValue<long>(_loadedModule, "Id");
-        
+       
         //We dont call InvokeAsync on _jsModule because we want to call our custom Methods on the Window
         //Object to retreive the result as a wrapped object
         return await JSRuntime.InvokeAsync<T>(identifier, targetInstanceId, args.First(), args[1..]);
@@ -82,4 +86,5 @@ internal class DynamicIsolatedJSRuntime<TComponent> : DynamicJSRuntime, IAsyncDi
         
         return ValueTask.CompletedTask;
     }
+    
 }
