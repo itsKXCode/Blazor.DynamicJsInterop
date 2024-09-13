@@ -11,7 +11,7 @@ using Microsoft.JSInterop.Infrastructure;
 namespace Blazor.DynamicJsInterop;
 
 /// <summary>
-/// Base Class for all Dynamic JS implementation, provides implementations for TryGetMember and TryInvokeMember
+/// Base Class for all Dynamic JS implementation
 /// </summary>
 internal abstract class DynamicJSBase : DynamicObject {
     public readonly IJSRuntime JSRuntime;

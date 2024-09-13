@@ -4,10 +4,11 @@ using Microsoft.JSInterop;
 namespace Blazor.DynamicJsInterop.Contracts;
 
 public interface IDynamicJSRuntime<T> : IDynamicJSRuntime where T : ComponentBase {
-    public dynamic Module { get; }
+    dynamic Module { get; }
     Task ImportIsolatedModule();
 }
 
 public interface IDynamicJSRuntime : IJSRuntime  {
-    public dynamic Window { get; }
+    dynamic Window { get; }
+    ValueTask WriteOperation { get; }
 }
