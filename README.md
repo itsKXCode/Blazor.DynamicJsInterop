@@ -24,6 +24,12 @@ Add the library in your Project Startup
 services.AddDynamicJSRuntime();
 ```
 
+And in your App.razor
+```
+@using Blazor.DynamicJsInterop.Const
+
+<script src="@DynamicJsInterop.JavaScriptFilePath"></script>
+```
 ## Methods
 
 Lets imagine we have the following JavaScript Method:
