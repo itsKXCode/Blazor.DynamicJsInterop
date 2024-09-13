@@ -6,7 +6,7 @@ Instead of
 ```
 @inject IJSRuntime JsRuntime
 ```
-use our
+use
 ```
 @inject IDynamicJSRuntime JsRuntime
 ```
@@ -34,7 +34,7 @@ function add(first, second) {
 }
 ```
 
-This is how we call it with the normal IJSRuntime
+This is how we call it with the build in IJSRuntime
 
 ```
 var result = await JsRuntime.InvokeAsync<int>("add", 1, 2);
