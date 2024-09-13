@@ -107,3 +107,5 @@ I plan to change this in the future.
 
 Tip: 
 <mark>Remember to always await every Operation with IDynamicJSRuntime</mark>
+
+### This Project is MIT Licensed
