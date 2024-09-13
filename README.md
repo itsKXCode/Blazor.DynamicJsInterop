@@ -93,7 +93,7 @@ The Module Property references our Isolated JavaScript.
 ### Importing Isolated JavaScript
 As you may have noticed, we havent imported our Isolated JavaScript like
 ```
-var module = JsRuntime.InvokeAsync<IJSObjectReference>("import", "{path}/component.js");
+var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "{path}/component.js");
 ```
 Thats because this Library Resolves and imports the JavaScript automatically the first time it is used.
 
