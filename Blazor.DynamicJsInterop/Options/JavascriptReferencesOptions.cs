@@ -13,9 +13,12 @@ public sealed class JavaScriptReferencesOptions : IPathFormatterResolver {
         (assembly, componentType, isExternal) => {
             var assemblyName = assembly.GetName().Name;
             var root = isExternal ? $"/_content/{assemblyName}" : "";//This part depends on the acutal AssemblyName
-
+            var nameSpace = componentType.Namespace.StartsWith(assemblyName)
+                ? componentType.Namespace.Remove(0, assemblyName.Length)
+                : componentType.Namespace;
+            
             return $".{root}" + 
-                   $"/{componentType.Namespace.Replace(assemblyName, string.Empty).Replace(".", "/")}" + //TODO wee need to set the actual path here not the namespace
+                   $"/{nameSpace.Replace(".", "/").Trim('/')}" + //TODO wee need to set the actual path here not the namespace
                    $"/{componentType.Name}.razor.js";
         };
 

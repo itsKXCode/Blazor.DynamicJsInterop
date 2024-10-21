@@ -5,13 +5,15 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Title>Blazor.DynamicJsInterop</Title>
-        <AssemblyVersion>1.0.0</AssemblyVersion>
-        <FileVersion>1.0.0</FileVersion>
+        <AssemblyVersion>1.10</AssemblyVersion>
+        <FileVersion>1.1.0</FileVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Description>Invoking JavaScript made easy, and clean.</Description>
         <PackageProjectUrl>https://github.com/itsKXCode/Blazor.DynamicJsInterop</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/itsKXCode/Blazor.DynamicJsInterop</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/itsKXCode/Blazor.DynamicJsInterop</RepositoryUrl>
+        <Version>1.1.0</Version>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -26,7 +28,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="README.md" />
+        <None Include="..\README.md" Pack="true" PackagePath="\"/>
       <None Remove=".gitignore" />
     </ItemGroup>
 
