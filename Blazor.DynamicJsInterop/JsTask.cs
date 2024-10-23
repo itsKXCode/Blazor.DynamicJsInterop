@@ -10,21 +10,21 @@ namespace Blazor.DynamicJsInterop;
 /// <typeparam name="T"></typeparam>
 public class JSTask<T> : DynamicObject {
     private readonly DynamicJSBase _dynamicJSBase;
-    private readonly ValueTask<T> _taskToReceiveCurrentJsObject;
+    protected readonly ValueTask<T> TaskToReceiveCurrentJsObject;
 
     internal JSTask(DynamicJSBase dynamicJSBase, ValueTask<T> taskToReceiveCurrentJsObject) {
         _dynamicJSBase = dynamicJSBase;
-        _taskToReceiveCurrentJsObject = taskToReceiveCurrentJsObject;
+        TaskToReceiveCurrentJsObject = taskToReceiveCurrentJsObject;
     }
     
     public ValueTaskAwaiter<T> GetAwaiter() {
-       return _taskToReceiveCurrentJsObject.GetAwaiter();
+       return TaskToReceiveCurrentJsObject.GetAwaiter();
     }
     
     public override bool TryGetMember(GetMemberBinder binder, out object? result) {
         async ValueTask<object> GetValue() {
             var dynJs = new DynamicJSObjectReference(
-                (IJSObjectReference)await _taskToReceiveCurrentJsObject, 
+                (IJSObjectReference)await TaskToReceiveCurrentJsObject, 
                 _dynamicJSBase.JSRuntime,
                 _dynamicJSBase.Options, 
                 _dynamicJSBase.AssemblyNameResolver);
@@ -40,7 +40,7 @@ public class JSTask<T> : DynamicObject {
     public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result) {
         async ValueTask<object> GetValue() {
             var dynJs = new DynamicJSObjectReference(
-                (IJSObjectReference)await _taskToReceiveCurrentJsObject, 
+                (IJSObjectReference)await TaskToReceiveCurrentJsObject, 
                 _dynamicJSBase.JSRuntime,
                 _dynamicJSBase.Options, 
                 _dynamicJSBase.AssemblyNameResolver);
@@ -57,7 +57,7 @@ public class JSTask<T> : DynamicObject {
     public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result) {
         async ValueTask<object> GetValue() {
             var dynJs = new DynamicJSObjectReference(
-                (IJSObjectReference)await _taskToReceiveCurrentJsObject, 
+                (IJSObjectReference)await TaskToReceiveCurrentJsObject, 
                 _dynamicJSBase.JSRuntime,
                 _dynamicJSBase.Options, 
                 _dynamicJSBase.AssemblyNameResolver);
@@ -70,10 +70,16 @@ public class JSTask<T> : DynamicObject {
         result = new JSTask<object>(_dynamicJSBase, GetValue());
         return true;
     }
+    public static implicit operator Task<T>(JSTask<T> task) => task.TaskToReceiveCurrentJsObject.AsTask();
+    public static implicit operator ValueTask<T>(JSTask<T> task) => task.TaskToReceiveCurrentJsObject;
 }
 
 public class JSTask : JSTask<object> {
     internal JSTask(DynamicJSBase dynamicJSBase, ValueTask<object> taskToReceiveCurrentJsObject) 
         : base(dynamicJSBase, taskToReceiveCurrentJsObject) {
     }
+    
+    
+    public static implicit operator Task(JSTask task) => task.TaskToReceiveCurrentJsObject.AsTask();
+    public static implicit operator ValueTask(JSTask task) => new ValueTask(task.TaskToReceiveCurrentJsObject.AsTask());
 }
