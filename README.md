@@ -29,6 +29,8 @@ And in your App.razor
 @using Blazor.DynamicJsInterop.Const
 
 <script src="@DynamicJsInterop.JavaScriptFilePath"></script>
+OR
+<script src="_content/Blazor.DynamicJsInterop/DynamicJS.js"></script>
 ```
 ## Methods
 
